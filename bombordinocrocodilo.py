@@ -1,7 +1,8 @@
 import numpy as np
 class SVM_classifier():
     # initiating the hyperparameters
-    def __init__(self,learning_rate,epochs,lambda_parameter):
+    def __init__(self,learning_rate,epochs,lambda_parameter,use_subgradient=True):
+        self.use_subgradient = use_subgradient
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.lambda_parameter = lambda_parameter
@@ -35,7 +36,13 @@ class SVM_classifier():
         
         # calculating gradients ( dw, db)
         for index , x_i in enumerate (self.X):
-            condition = y_label[index] * (np.dot(x_i,self.w)+self.b) >= 1
+            decision_value = y_label[index] * (np.dot(x_i, self.w) + self.b)
+            ##condition = y_label[index] * (np.dot(x_i, self.w) + self.b) >= 1 if self.use_subgradient else > 1
+            if self.use_subgradient:
+                condition = decision_value >= 1
+            else:
+                condition = decision_value > 1
+            # if the condition is satisfied, we update the weights and bias using the subgradient else we update the weights and bias using the gradient
             if condition :
                 dw =  self.lambda_parameter * self.w
                 db = 0
