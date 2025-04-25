@@ -19,7 +19,11 @@ class SVM_classifier():
         self.X = X
         self.y = y
         self.losses = []
-        self.accuracies = []       
+        self.accuracies = []    
+        self.precisions = []
+        self.recalls = []
+        self.f1_scores = []
+        
         
         #  Optimization using Sub gradient Descent algorithm
         for i in range(self.epochs):
@@ -28,7 +32,8 @@ class SVM_classifier():
             self.losses.append(loss)
             self.accuracies.append(self.calculate_accuracy(self.X,self.y))
             if (losspnt):
-                print(f"epoch {i+1}/{self.epochs} - Hinge Loss: {loss:.4f} \n , Accuracy: {self.calculate_accuracy(self.X,self.y):.2f}%")
+                print(f"Epoch {i+1}/{self.epochs} - Hinge Loss: {loss:.4f}, Accuracy: {self.accuracies[-1]:.2f}%, Precision: {self.calculate_precision(self.X,self.y):.2f}%, Recall: {self.calculate_recall(self.X,self.y):.2f}%, F1 Score: {self.calculate_f1_score(self.X,self.y):.2f}%")
+                print("<-------------------------------------------------->")
             
     def update_weights(self):
         #label encoding {0:-1 , 1:+1}  
@@ -41,7 +46,10 @@ class SVM_classifier():
             if self.use_subgradient:
                 condition = decision_value >= 1
             else:
-                condition = decision_value > 1
+                if decision_value == 1:
+                    continue
+                else :
+                    condition = decision_value > 1
             # if the condition is satisfied, we update the weights and bias using the subgradient else we update the weights and bias using the gradient
             if condition :
                 dw =  self.lambda_parameter * self.w
@@ -64,18 +72,38 @@ class SVM_classifier():
         y_hat = self.predict(X)
         accuracy = np.mean(y_hat == y) * 100
         return accuracy
+    def calculate_precision(self,X,y):
+        # calculating the precision of the model
+        y_hat = self.predict(X)
+        true_positive = np.sum((y_hat == 1) & (y == 1))
+        false_positive = np.sum((y_hat == 1) & (y == 0))
+        precision = true_positive / (true_positive + false_positive) if (true_positive + false_positive) > 0 else 0
+        return precision * 100
+    def calculate_recall(self,X,y):
+        # calculating the recall of the model
+        y_hat = self.predict(X)
+        true_positive = np.sum((y_hat == 1) & (y == 1))
+        false_negative = np.sum((y_hat == 0) & (y == 1))
+        recall = true_positive / (true_positive + false_negative) if (true_positive + false_negative) > 0 else 0
+        return recall * 100
+    def calculate_f1_score(self,X,y):
+        # calculating the f1 score of the model
+        precision = self.calculate_precision(X,y)
+        recall = self.calculate_recall(X,y)
+        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        return f1_score
+    
     def get_Weights(self):
         # returning the weights and bias
         return self.w , self.b
     def get_stats(self):
         # returning the losses for plotting the loss curve
-        return self.losses ,self.accuracies
+        return self.losses ,self.accuracies , self.precisions , self.recalls , self.f1_scores
         
     
     # predict the label for a given input value
     def predict(self,X):
         output = np.dot(X,self.w) + self.b
-        
         predicted_labels = np.sign(output)
         y_hat = np.where(predicted_labels <= -1 ,0 ,1)
         return y_hat
