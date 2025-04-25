@@ -31,9 +31,12 @@ class SVM_classifier():
             loss = self.calculate_hinge_loss(self.X, self.y)
             self.losses.append(loss)
             self.accuracies.append(self.calculate_accuracy(self.X,self.y))
+            self.precisions.append(self.calculate_precision(self.X,self.y))
+            self.recalls.append(self.calculate_recall(self.X,self.y))
+            self.f1_scores.append(self.calculate_f1_score(self.X,self.y))
             if (losspnt):
                 print(f"Epoch {i+1}/{self.epochs} - Hinge Loss: {loss:.4f}, Accuracy: {self.accuracies[-1]:.2f}%, Precision: {self.calculate_precision(self.X,self.y):.2f}%, Recall: {self.calculate_recall(self.X,self.y):.2f}%, F1 Score: {self.calculate_f1_score(self.X,self.y):.2f}%")
-                print("<-------------------------------------------------->")
+                print("------------------------------------------------------------------------")
             
     def update_weights(self):
         #label encoding {0:-1 , 1:+1}  
@@ -63,8 +66,7 @@ class SVM_classifier():
      # calculating hinge loss to measure the performance of the SVM classifier   
     def calculate_hinge_loss(self, X, y):
         y_label = np.where(y <= 0, -1, 1)
-        distances = 1 - y_label * (np.dot(X, self.w) + self.b)
-        distances = np.maximum(0, distances)
+        distances = np.maximum(0,1 - y_label * (np.dot(X, self.w) + self.b))
         hinge_loss = np.mean(distances) + (self.lambda_parameter / 2) * np.dot(self.w, self.w)
         return hinge_loss 
     def calculate_accuracy(self,X,y):
